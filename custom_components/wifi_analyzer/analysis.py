@@ -216,6 +216,7 @@ def analyze_band(
     plan_24: str = DEFAULT_PLAN_24,
     own_channels_hint: list[int] | None = None,
     utilization: list[dict[str, Any]] | None = None,
+    allowed: set[int] | None = None,
 ) -> BandAnalysis:
     """Analizza una banda.
 
@@ -263,6 +264,10 @@ def analyze_band(
         preferred = CHANNEL_PLANS_24.get(plan_24, CHANNEL_PLANS_24[DEFAULT_PLAN_24])
     else:
         preferred = [c for c in CHANNELS_5 if c not in DFS_5 and c != 165]
+    # Mai consigliare un canale che i propri access point non possono usare
+    # (paese, hardware): l'elenco arriva dai router che lo espongono.
+    if allowed and any(c in allowed for c in preferred):
+        preferred = [c for c in preferred if c in allowed]
 
     # Occupazione misurata (router, sniffer): media per canale tra chi la misura.
     busy: dict[int, list[float]] = {}
@@ -390,11 +395,13 @@ def analyze(
     plan_24: str = DEFAULT_PLAN_24,
     own_channels_hint: list[int] | None = None,
     utilization: list[dict[str, Any]] | None = None,
+    allowed: dict[str, set[int]] | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Analizza tutte le bande disponibili."""
     return {
         band: analyze_band(
-            band, networks, own_bssids, own_ssids, plan_24, own_channels_hint, utilization
+            band, networks, own_bssids, own_ssids, plan_24, own_channels_hint, utilization,
+            (allowed or {}).get(band),
         ).as_dict()
         for band in (BAND_24, BAND_5)
     }

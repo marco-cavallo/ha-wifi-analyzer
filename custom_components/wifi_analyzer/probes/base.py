@@ -72,7 +72,8 @@ class ScanResult:
 
     networks: list[Network] = field(default_factory=list)
     utilization: list[dict[str, Any]] = field(default_factory=list)
-    # Access point di casa noti al router: {"bssid", "ssid", "channel", "band", "name"}.
+    # Access point di casa noti al router: {"bssid", "ssid", "channel", "band", "name"},
+    # e facoltativo "allowed": i canali che quella radio può usare.
     # Servono a riconoscere la propria rete e il canale attuale anche quando
     # nessun'altra sonda li vede.
     own_aps: list[dict[str, Any]] = field(default_factory=list)

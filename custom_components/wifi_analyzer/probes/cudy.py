@@ -156,7 +156,9 @@ def _own_aps(hass: HomeAssistant, entry_id: str | None) -> list[dict]:
                     continue
                 if channel and str(radio.get("disabled")) != "1":
                     aps.append({"bssid": None, "ssid": None, "channel": channel,
-                                "band": band_of(channel), "name": getattr(node, "name", None)})
+                                "band": band_of(channel), "name": getattr(node, "name", None),
+                                # Canali permessi dal paese impostato sul router.
+                                "allowed": [int(c) for c in radio.get("chanlist") or [] if str(c).isdigit()]})
     return aps
 
 

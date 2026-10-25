@@ -97,6 +97,17 @@ class AnalyzerData:
     last_scan: dict[str, Any] | None = None
 
 
+def _allowed_channels(router_aps: list[dict[str, Any]]) -> dict[str, set[int]]:
+    """Canali usabili per banda: quelli permessi a tutti gli access point."""
+    allowed: dict[str, set[int]] = {}
+    for ap in router_aps:
+        if ap.get("allowed") and ap.get("band"):
+            channels = set(ap["allowed"])
+            band = ap["band"]
+            allowed[band] = allowed[band] & channels if band in allowed else channels
+    return allowed
+
+
 class WifiAnalyzerCoordinator(DataUpdateCoordinator[AnalyzerData]):
     """Coordinator dell'integrazione."""
 
@@ -175,6 +186,7 @@ class WifiAnalyzerCoordinator(DataUpdateCoordinator[AnalyzerData]):
         bands = analyze(
             networks, own_bssids, set(own_ssids), plan, channels_hint,
             last.get("utilization") if last else None,
+            _allowed_channels(router_aps),
         )
 
         return AnalyzerData(
