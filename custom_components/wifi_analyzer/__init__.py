@@ -133,5 +133,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: WifiAnalyzerConfigEntry
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: WifiAnalyzerConfigEntry) -> None:
-    """Ricarica quando cambiano le opzioni."""
+    """Ricarica quando cambiano le opzioni.
+
+    La scelta delle sonde dal pannello non ricarica: interromperebbe il
+    pannello aperto per una modifica che il coordinator legge già al volo.
+    """
+    coordinator = entry.runtime_data
+    if coordinator.skip_reload:
+        coordinator.skip_reload = False
+        return
     await hass.config_entries.async_reload(entry.entry_id)

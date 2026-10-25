@@ -23,7 +23,7 @@ from typing import Final
 DOMAIN: Final = "wifi_analyzer"
 INTEGRATION_NAME: Final = "Wi-Fi Analyzer"
 AUTHOR: Final = "Marco Cavallo"
-VERSION: Final = "0.1.0"
+VERSION: Final = "0.1.1"
 
 CONF_PROBES: Final = "probes"
 CONF_OWN_SSIDS: Final = "own_ssids"

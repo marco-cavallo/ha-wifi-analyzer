@@ -61,19 +61,27 @@ PAUSE_BETWEEN_PROBES = 2
 
 @dataclass(slots=True)
 class ScanProgress:
-    """Avanzamento della scansione in corso, per il pannello."""
+    """Avanzamento della scansione in corso, per il pannello.
+
+    `probes` ha una voce per sonda con lo stato: waiting, scanning, done,
+    error, skipped (interrotta prima di arrivarci).
+    """
 
     running: bool = False
-    total: int = 0
-    done: int = 0
-    current: str | None = None
+    cancelling: bool = False
     started: float | None = None
+    started_at: str | None = None
+    probes: list[dict[str, Any]] = field(default_factory=list)
 
     def as_dict(self) -> dict[str, Any]:
+        done = sum(1 for p in self.probes if p["state"] in ("done", "error", "skipped"))
+        current = next((p["name"] for p in self.probes if p["state"] == "scanning"), None)
         return {
-            "running": self.running, "total": self.total, "done": self.done,
-            "current": self.current,
+            "running": self.running, "cancelling": self.cancelling,
+            "total": len(self.probes), "done": done, "current": current,
+            "started_at": self.started_at,
             "elapsed": round(time.monotonic() - self.started, 1) if self.started else None,
+            "probes": self.probes,
         }
 
 
@@ -105,8 +113,13 @@ class WifiAnalyzerCoordinator(DataUpdateCoordinator[AnalyzerData]):
         self._store: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, STORAGE_KEY)
         self.history: list[dict[str, Any]] = []
         self.progress = ScanProgress()
+        # Esito dell'ultima scansione finita, per l'avviso nel pannello.
+        self.last_result: dict[str, Any] | None = None
         self._lock = asyncio.Lock()
+        self._cancel = asyncio.Event()
         self._unsub_schedule = None
+        # Messo a True da async_set_probes: quella modifica non serve ricaricare.
+        self.skip_reload = False
 
     # ------------------------------------------------------------ ciclo di vita
 
@@ -213,6 +226,15 @@ class WifiAnalyzerCoordinator(DataUpdateCoordinator[AnalyzerData]):
 
     # ------------------------------------------------------------ scansione
 
+    async def async_set_probes(self, probe_ids: list[str]) -> None:
+        """Salva le sonde scelte dal pannello, senza ricaricare l'integrazione."""
+        self.skip_reload = True
+        self.hass.config_entries.async_update_entry(
+            self.config_entry,
+            options={**self.config_entry.options, CONF_PROBES: list(probe_ids)},
+        )
+        self.async_update_listeners()
+
     def selected_probes(self) -> list[Probe]:
         wanted = self.config_entry.options.get(CONF_PROBES)
         probes = self.data.probes if self.data else []
@@ -220,11 +242,41 @@ class WifiAnalyzerCoordinator(DataUpdateCoordinator[AnalyzerData]):
             return probes
         return [p for p in probes if p.probe_id in wanted]
 
+    @property
+    def scanning(self) -> bool:
+        return self._lock.locked()
+
+    @callback
+    def async_start_scan(self, probe_ids: list[str] | None = None) -> bool:
+        """Avvia la scansione in background. False se ce n'è già una."""
+        if self._lock.locked():
+            return False
+        self.config_entry.async_create_background_task(
+            self.hass, self.async_run_scan(probe_ids), f"{DOMAIN}_scan"
+        )
+        return True
+
+    @callback
+    def async_cancel_scan(self) -> bool:
+        """Chiede di fermare la scansione dopo la sonda in corso."""
+        if not self._lock.locked():
+            return False
+        self._cancel.set()
+        self.progress.cancelling = True
+        self.async_update_listeners()
+        return True
+
     async def async_run_scan(self, probe_ids: list[str] | None = None) -> dict[str, Any]:
-        """Scansione con tutte le sonde scelte, una alla volta."""
+        """Scansione con le sonde scelte, una alla volta.
+
+        La scansione di una singola sonda non si può interrompere a metà
+        (sono circa 3 secondi): l'interruzione vale dalla sonda successiva, e
+        le reti già raccolte vengono comunque salvate.
+        """
         if self._lock.locked():
             raise RuntimeError("scan_running")
         async with self._lock:
+            self._cancel.clear()
             if not self.data:
                 await self.async_refresh()
             probes = self.selected_probes()
@@ -232,31 +284,52 @@ class WifiAnalyzerCoordinator(DataUpdateCoordinator[AnalyzerData]):
                 probes = [p for p in self.data.probes if p.probe_id in probe_ids]
 
             self.progress = ScanProgress(
-                running=True, total=len(probes), started=time.monotonic()
+                running=True,
+                started=time.monotonic(),
+                started_at=dt_util.utcnow().isoformat(),
+                probes=[
+                    {"id": p.probe_id, "name": p.name, "area": p.area, "kind": p.kind,
+                     "state": "waiting", "networks": None, "error": None, "duration": None}
+                    for p in probes
+                ],
             )
             self.async_update_listeners()
             networks: list[Network] = []
             results: list[dict[str, Any]] = []
+            cancelled = False
             try:
                 for index, probe in enumerate(probes):
-                    self.progress.current = probe.name
+                    item = self.progress.probes[index]
+                    if self._cancel.is_set():
+                        cancelled = True
+                        item["state"] = "skipped"
+                        continue
+                    item["state"] = "scanning"
+                    self.async_update_listeners()
                     started = time.monotonic()
                     try:
                         found = await async_scan(self.hass, probe)
                         networks.extend(found)
+                        item.update(state="done", networks=len(found),
+                                    duration=round(time.monotonic() - started, 1))
                         results.append({
                             **probe.as_dict(), "ok": True, "networks": len(found),
                             "bands": sorted({n.band for n in found}),
-                            "duration": round(time.monotonic() - started, 1),
+                            "duration": item["duration"],
                         })
                     except ProbeError as err:
                         _LOGGER.info("Sonda %s: %s", probe.name, err)
+                        item.update(state="error", error=str(err))
                         results.append({**probe.as_dict(), "ok": False, "error": str(err)})
-                    self.progress.done = index + 1
+                    self.async_update_listeners()
                     if probe.kind == PROBE_SHELLY and index + 1 < len(probes):
-                        await asyncio.sleep(PAUSE_BETWEEN_PROBES)
+                        try:
+                            await asyncio.wait_for(self._cancel.wait(), PAUSE_BETWEEN_PROBES)
+                        except TimeoutError:
+                            pass
             finally:
                 duration = round(time.monotonic() - (self.progress.started or time.monotonic()), 1)
+                summary_probes = list(self.progress.probes)
                 self.progress = ScanProgress()
 
             scan = {
@@ -264,13 +337,25 @@ class WifiAnalyzerCoordinator(DataUpdateCoordinator[AnalyzerData]):
                 "duration": duration,
                 "probes": results,
                 "networks": [n.as_dict() for n in networks],
+                "cancelled": cancelled,
             }
             if networks:
                 self.history.append(scan)
                 self.history = self.history[-HISTORY_SIZE:]
                 await self._store.async_save({"scans": self.history})
+            self.last_result = {
+                "time": scan["time"],
+                "duration": duration,
+                "cancelled": cancelled,
+                "saved": bool(networks),
+                "networks": len({n.bssid for n in networks}),
+                "ok": sum(1 for p in summary_probes if p["state"] == "done"),
+                "failed": sum(1 for p in summary_probes if p["state"] == "error"),
+                "skipped": sum(1 for p in summary_probes if p["state"] == "skipped"),
+                "total": len(summary_probes),
+            }
             await self.async_refresh()
-            return self._scan_summary(scan) or {}
+            return self.last_result
 
     def history_summary(self) -> list[dict[str, Any]]:
         """Andamento nel tempo: canale e punteggio per ogni scansione."""

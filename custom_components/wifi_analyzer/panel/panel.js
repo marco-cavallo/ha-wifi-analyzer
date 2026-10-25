@@ -64,6 +64,17 @@ const I18N = {
     widthHint24: "On 2.4 GHz use 20 MHz: 40 MHz takes two thirds of the band.",
     error: "Error", retry: "Retry", loading: "Loading…",
     tableView: "Table", chartView: "Chart", by: "By",
+    stop: "Stop", stopping: "Stopping…", stopHint: "Stops after the probe being scanned",
+    scanRunning: "Scan in progress", scanDone: "Scan complete", scanStopped: "Scan stopped", scanFailed: "No probe answered",
+    scanSub: "{done} of {total} probes · {elapsed} s", remaining: "about {s} s left",
+    resultSub: "at {time} · {networks} networks · {ok} of {total} probes in {duration} s",
+    resultStopped: "at {time} · {ok} of {total} probes · {networks} networks saved", notSaved: "nothing saved",
+    failedN: "{n} probes did not answer",
+    st_waiting: "Waiting", st_scanning: "Scanning…", st_done: "{n} networks · {s} s", st_error: "Error", st_skipped: "Skipped",
+    close: "Close",
+    probesSub: "Choose which devices scan. A Shelly leaves Wi-Fi for about 3 seconds during its own scan.",
+    selAll: "All", selSuggested: "One per room", selNone: "None",
+    selCount: "{n} of {total} selected · scan takes about {s} s", noProbesSelected: "No probe selected: choose at least one below.",
   },
   it: {
     title: "Analisi Wi-Fi", openMenu: "Apri il menu laterale",
@@ -101,6 +112,17 @@ const I18N = {
     widthHint24: "Sul 2,4 GHz usa 20 MHz: i 40 MHz occupano due terzi della banda.",
     error: "Errore", retry: "Riprova", loading: "Caricamento…",
     tableView: "Tabella", chartView: "Grafico", by: "By",
+    stop: "Interrompi", stopping: "Interruzione…", stopHint: "Si ferma dopo la sonda in corso",
+    scanRunning: "Scansione in corso", scanDone: "Scansione completata", scanStopped: "Scansione interrotta", scanFailed: "Nessuna sonda ha risposto",
+    scanSub: "{done} di {total} sonde · {elapsed} s", remaining: "circa {s} s alla fine",
+    resultSub: "alle {time} · {networks} reti · {ok} di {total} sonde in {duration} s",
+    resultStopped: "alle {time} · {ok} di {total} sonde · {networks} reti salvate", notSaved: "nessun dato salvato",
+    failedN: "{n} sonde non hanno risposto",
+    st_waiting: "In attesa", st_scanning: "Sta scansionando…", st_done: "{n} reti · {s} s", st_error: "Errore", st_skipped: "Saltata",
+    close: "Chiudi",
+    probesSub: "Scegli quali dispositivi fanno la scansione. Uno Shelly si stacca dal Wi-Fi per circa 3 secondi durante la sua.",
+    selAll: "Tutte", selSuggested: "Una per stanza", selNone: "Nessuna",
+    selCount: "{n} di {total} selezionate · scansione di circa {s} s", noProbesSelected: "Nessuna sonda selezionata: scegline almeno una qui sotto.",
   },
 };
 
@@ -126,6 +148,13 @@ const P = {
   table: "M5,4H19A2,2 0 0,1 21,6V18A2,2 0 0,1 19,20H5A2,2 0 0,1 3,18V6A2,2 0 0,1 5,4M5,8V12H11V8H5M13,8V12H19V8H13M5,14V18H11V14H5M13,14V18H19V14H13Z",
   chart: "M3,14L3.5,14.07L8.07,9.5C7.89,8.85 8.06,8.11 8.59,7.59C9.37,6.8 10.63,6.8 11.41,7.59C11.94,8.11 12.11,8.85 11.93,9.5L14.5,12.07L15,12C15.18,12 15.35,12 15.5,12.07L19.07,8.5C19,8.35 19,8.18 19,8A2,2 0 0,1 21,6A2,2 0 0,1 23,8A2,2 0 0,1 21,10C20.82,10 20.65,10 20.5,9.93L16.93,13.5C17,13.65 17,13.82 17,14A2,2 0 0,1 15,16A2,2 0 0,1 13,14L13.07,13.5L10.5,10.93C10.18,11 9.82,11 9.5,10.93L4.93,15.5L5,16A2,2 0 0,1 3,18A2,2 0 0,1 1,16A2,2 0 0,1 3,14Z",
 };
+Object.assign(P, {
+  stop: "M18,18H6V6H18V18Z",
+  close: "M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z",
+  clock: "M12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22C6.47,22 2,17.5 2,12A10,10 0 0,1 12,2M12.5,7V12.25L17,14.92L16.25,16.15L11,13V7H12.5Z",
+  skip: "M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M7,11V13H17V11H7Z",
+  error: "M13,13H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z",
+});
 const icon = (name, cls = "") => `<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${P[name]}"/></svg>`;
 
 const QUALITY_ICON = { excellent: "check", good: "check", fair: "info", weak: "alert", unknown: "info" };
@@ -316,7 +345,6 @@ th.num { text-align: right; }
 .probe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
 .probe { display: flex; gap: 12px; padding: 12px; border-radius: 14px; border: 1px solid var(--wa-grid); align-items: center; }
 .probe .pi { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: var(--wa-wash); color: var(--wa-own); flex: none; }
-.probe.off { opacity: .6; }
 .probe .pn { font-weight: 600; font-size: 13.5px; }
 .probe .pm { font-size: 12px; color: var(--wa-ink2); }
 .probe .err { color: var(--wa-crit); }
@@ -329,6 +357,61 @@ th.num { text-align: right; }
 .footer a { color: inherit; }
 .err-box { padding: 20px; color: var(--wa-crit); }
 .muted { color: var(--wa-ink2); font-size: 13px; margin: 4px 0; }
+
+.probes-btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(255,255,255,.45); background: rgba(255,255,255,.12); color: #fff;
+  border-radius: 999px; padding: 9px 14px; cursor: pointer; font-size: 13.5px; font-weight: 600; margin-right: 8px; }
+.probes-btn:hover { background: rgba(255,255,255,.22); }
+.probes-btn .ic { width: 18px; height: 18px; }
+@media (max-width: 560px) { .probes-btn span { display: none; } .probes-btn { padding: 9px; } }
+.scan-btn.stop { background: #fff; color: var(--wa-crit); }
+.scan-btn.stop .ic { animation: none; }
+
+.scan-card { padding: 16px 20px; display: grid; gap: 12px; border-left: 4px solid var(--wa-own); }
+.scan-card.done { border-left-color: var(--wa-good); }
+.scan-card.stopped { border-left-color: var(--wa-warn); }
+.scan-card.failed { border-left-color: var(--wa-crit); }
+.sc-head { display: flex; align-items: center; gap: 14px; }
+.sc-badge { width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center; flex: none; background: var(--wa-wash); color: var(--wa-own); }
+.sc-badge.run .ic { animation: spin 1.6s linear infinite; }
+.done .sc-badge { background: color-mix(in srgb, var(--wa-good) 14%, transparent); color: var(--wa-good); }
+.stopped .sc-badge { background: color-mix(in srgb, var(--wa-warn) 18%, transparent); color: #9a6a00; }
+:host([dark]) .stopped .sc-badge { color: var(--wa-warn); }
+.failed .sc-badge { background: color-mix(in srgb, var(--wa-crit) 14%, transparent); color: var(--wa-crit); }
+.sc-title { font-size: 16px; font-weight: 650; }
+.sc-sub { font-size: 13px; color: var(--wa-ink2); margin-top: 2px; }
+.btn-outline { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--wa-ring); background: var(--wa-card); color: var(--wa-ink); border-radius: 999px; padding: 7px 14px; cursor: pointer; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.btn-outline:hover { background: var(--wa-wash); }
+.btn-outline.danger { color: var(--wa-crit); border-color: color-mix(in srgb, var(--wa-crit) 40%, transparent); }
+.btn-outline.danger:hover { background: color-mix(in srgb, var(--wa-crit) 8%, transparent); }
+.btn-outline[disabled] { opacity: .55; cursor: default; }
+.btn-outline .ic { width: 16px; height: 16px; }
+.sc-bar { height: 8px; background: var(--wa-grid); border-radius: 99px; overflow: hidden; }
+.sc-bar > i { display: block; height: 100%; border-radius: 99px; background: var(--wa-own); transition: width .5s ease; }
+.sc-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 6px 14px; }
+.sc-item { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 13px; min-width: 0; }
+.sc-item .ic { width: 18px; height: 18px; flex: none; }
+.sc-item .nm { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sc-item .st { color: var(--wa-ink2); font-size: 12px; }
+.sc-item.waiting { opacity: .6; } .sc-item.waiting .ic { color: var(--wa-muted); }
+.sc-item.scanning .ic { color: var(--wa-own); animation: spin 1.6s linear infinite; }
+.sc-item.scanning .st { color: var(--wa-own); font-weight: 600; }
+.sc-item.done .ic { color: var(--wa-good); }
+.sc-item.error .ic { color: var(--wa-crit); } .sc-item.error .st { color: var(--wa-crit); }
+.sc-item.skipped { opacity: .6; } .sc-item.skipped .ic { color: var(--wa-muted); }
+
+.probe-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+.probe-actions .count { font-size: 12.5px; color: var(--wa-ink2); margin-left: 6px; }
+.probe { cursor: pointer; background: none; text-align: left; width: 100%; font: inherit; color: inherit; transition: border-color .15s ease, background .15s ease; }
+.probe:hover { background: var(--wa-wash); }
+.probe.on { border-color: color-mix(in srgb, var(--wa-own) 55%, transparent); }
+.probe[disabled] { cursor: default; }
+.probe .grow { flex: 1; min-width: 0; }
+.switch { width: 36px; height: 20px; border-radius: 99px; background: var(--wa-grid); position: relative; flex: none; transition: background .15s ease; }
+.switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .15s ease; }
+.probe.on .switch { background: var(--wa-own); }
+.probe.on .switch::after { transform: translateX(16px); }
+.warn-line { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--wa-ink); background: color-mix(in srgb, var(--wa-warn) 14%, transparent); padding: 8px 12px; border-radius: 10px; margin-bottom: 10px; }
+.warn-line .ic { color: var(--wa-warn); width: 18px; height: 18px; }
 
 @media (max-width: 1000px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .two { grid-template-columns: 1fr; } }
 @media (max-width: 560px) {
@@ -377,9 +460,12 @@ class WifiAnalyzerPanel extends HTMLElement {
     this._devFilter = "all";
     this._devSearch = "";
     this._tableView = false;
-    this._scanning = false;
     this._progress = null;
+    this._result = null;
+    this._savingProbes = false;
   }
+
+  get _running() { return !!this._progress?.running; }
 
   set hass(hass) {
     const first = !this._hass;
@@ -404,7 +490,10 @@ class WifiAnalyzerPanel extends HTMLElement {
     try {
       this._data = await this._ws("data");
       this._error = null;
-      if (this._data.progress?.running && !this._scanning) this._watchProgress();
+      if (this._data.progress?.running) {
+        this._progress = this._data.progress;
+        this._watchProgress();
+      }
       // Se c'è solo il 5 GHz, parti da lì.
       if (!this._data.bands["2.4"]?.probes?.length && this._data.bands["5"]?.probes?.length) this._band = "5";
     } catch (err) {
@@ -414,37 +503,72 @@ class WifiAnalyzerPanel extends HTMLElement {
   }
 
   async _scan() {
-    if (this._scanning) return;
-    this._scanning = true;
-    this._progress = { running: true, done: 0, total: this._data?.probes?.filter((p) => p.selected).length || 0 };
-    this._render();
-    const poll = this._watchProgress();
+    if (this._running) return;
+    this._result = null;
     try {
-      this._data = await this._ws("scan");
-      this._error = null;
+      await this._ws("scan");
     } catch (err) {
-      if (err.code !== "scan_running") this._error = err.message || String(err);
+      if (err.code !== "scan_running") {
+        this._error = err.message || String(err);
+        this._render();
+        return;
+      }
     }
-    this._scanning = false;
-    clearInterval(poll);
-    this._progress = null;
+    const selected = (this._data?.probes || []).filter((p) => p.selected);
+    this._progress = {
+      running: true, total: selected.length, done: 0, elapsed: 0,
+      probes: selected.map((p) => ({ id: p.id, name: p.name, area: p.area, state: "waiting" })),
+    };
     this._render();
+    this._watchProgress();
   }
 
+  async _cancel() {
+    if (!this._running) return;
+    this._progress.cancelling = true;
+    this._renderScanState();
+    try { await this._ws("cancel"); } catch (_) { /* il polling mostrerà lo stato vero */ }
+  }
+
+  /** Segue la scansione in corso; quando finisce ricarica i dati e mostra l'esito. */
   _watchProgress() {
-    const id = setInterval(async () => {
+    if (this._pollTimer) return;
+    this._pollTimer = setInterval(async () => {
       try {
         const p = await this._ws("progress");
         if (!p.running) {
-          clearInterval(id);
-          if (!this._scanning) this._load();
+          clearInterval(this._pollTimer);
+          this._pollTimer = null;
+          this._progress = null;
+          await this._load();
+          this._result = this._data?.last_result || null;
+          this._render();
           return;
         }
         this._progress = p;
-        this._renderProgress();
-      } catch (_) { clearInterval(id); }
-    }, 1000);
-    return id;
+        this._renderScanState();
+      } catch (_) {
+        clearInterval(this._pollTimer);
+        this._pollTimer = null;
+      }
+    }, 800);
+  }
+
+  /** Controllo leggero ogni 10 s: una scansione partita dal pulsante o da un'automazione compare anche qui. */
+  _startIdleWatch() {
+    clearInterval(this._idleTimer);
+    this._idleTimer = setInterval(async () => {
+      if (this._running || !this._hass || document.hidden) return;
+      try {
+        const p = await this._ws("progress");
+        if (p.running) {
+          this._result = null;
+          this._progress = p;
+          this._render();
+          this._watchProgress();
+        }
+      } catch (_) { /* integrazione ricaricata: riprova al giro dopo */ }
+    }, 10000);
   }
 
   // -------------------------------------------------------------- dati derivati
@@ -489,9 +613,15 @@ class WifiAnalyzerPanel extends HTMLElement {
       }
     });
     this._ro.observe(this);
+    this._startIdleWatch();
   }
 
-  disconnectedCallback() { this._ro?.disconnect(); }
+  disconnectedCallback() {
+    this._ro?.disconnect();
+    clearInterval(this._idleTimer);
+    clearInterval(this._pollTimer);
+    this._pollTimer = null;
+  }
 
   _render() {
     this._measure();
@@ -517,6 +647,7 @@ class WifiAnalyzerPanel extends HTMLElement {
     root.innerHTML = `<style>${STYLE}</style>
       ${this._heroHtml()}
       <div class="wrap">
+        <div id="scan-slot">${this._scanCardHtml()}</div>
         ${this._toolbarHtml()}
         ${hasScan && bandReady ? `
           ${this._tilesHtml()}
@@ -533,7 +664,7 @@ class WifiAnalyzerPanel extends HTMLElement {
             <p>${hasScan ? this.t("noBand") : this.t("empty")}</p>
           </div>`}
         <div class="card section">${this._devicesHtml()}</div>
-        <div class="card section">${this._probesHtml()}</div>
+        <div class="card section" id="probes-section">${this._probesHtml()}</div>
         <div class="footer">${esc(d.integration.name)} ${esc(d.integration.version)} · ${this.t("by")} ${esc(d.integration.author)}</div>
       </div>`;
 
@@ -544,6 +675,8 @@ class WifiAnalyzerPanel extends HTMLElement {
       this._bindScores();
     }
     this._bindDevices();
+    this._bindScanCard();
+    this._bindProbes();
   }
 
   _heroHtml() {
@@ -552,37 +685,111 @@ class WifiAnalyzerPanel extends HTMLElement {
     const sub = last
       ? `${this.t("lastScan")} ${esc(relTime(last.time, this._lang))} · ${this.t("probesN", { n: last.probes.filter((p) => p.ok).length })} · ${this.t("networksN", { n: last.networks })}`
       : this.t("never");
-    const running = this._scanning || this._progress?.running;
     return `<div class="hero">
       <div class="bar">
         ${this._narrow ? `<button class="icon-btn" id="menu" title="${this.t("openMenu")}" aria-label="${this.t("openMenu")}">${icon("menu")}</button>` : ""}
         <div><h1>${this.t("title")}</h1><div class="sub" id="hero-sub">${sub}</div></div>
         <div class="spacer"></div>
-        <button class="scan-btn ${running ? "running" : ""}" id="scan" ${running || !d ? "disabled" : ""}>
-          ${icon("radar")}<span>${running ? this.t("scanning") : this.t("scan")}</span>
-        </button>
+        ${d ? `<button class="probes-btn" id="goto-probes">${icon("chip")}<span>${this.t("probes")} ${d.probes.filter((p) => p.selected).length}/${d.probes.length}</span></button>` : ""}
+        <span id="hero-btn">${this._heroBtnHtml()}</span>
       </div>
-      <div id="progress-slot">${running ? this._progressHtml() : ""}</div>
     </div>`;
   }
 
-  _progressHtml() {
-    const p = this._progress || {};
-    const pct = p.total ? Math.round((p.done / p.total) * 100) : 4;
-    return `<div class="progress" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${Math.max(pct, 4)}%"></i></div>
-      <div class="progress-label">${this.t("scanOf", { done: p.done || 0, total: p.total || "…" })}${p.current ? ` · ${esc(p.current)}` : ""}</div>`;
-  }
-
-  _renderProgress() {
-    const slot = this.shadowRoot.getElementById("progress-slot");
-    if (slot) slot.innerHTML = this._progressHtml();
+  _heroBtnHtml() {
+    const d = this._data;
+    if (this._running) {
+      const c = this._progress.cancelling;
+      return `<button class="scan-btn stop" id="stop" ${c ? "disabled" : ""} title="${this.t("stopHint")}">${icon("stop")}<span>${c ? this.t("stopping") : this.t("stop")}</span></button>`;
+    }
+    const none = d && !d.probes.some((p) => p.selected);
+    return `<button class="scan-btn" id="scan" ${!d || none ? "disabled" : ""}>${icon("radar")}<span>${this.t("scan")}</span></button>`;
   }
 
   _bindHero() {
     const root = this.shadowRoot;
     root.getElementById("scan")?.addEventListener("click", () => this._scan());
+    root.getElementById("stop")?.addEventListener("click", () => this._cancel());
+    root.getElementById("goto-probes")?.addEventListener("click", () => {
+      root.getElementById("probes-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
     root.getElementById("menu")?.addEventListener("click", () => {
       this.dispatchEvent(new CustomEvent("hass-toggle-menu", { bubbles: true, composed: true }));
+    });
+  }
+
+  // ------------------------------------------------------------ scansione
+
+  _scanCardHtml() {
+    if (this._running) {
+      const p = this._progress;
+      const total = p.total || (p.probes || []).length;
+      const pct = total ? Math.round((p.done / total) * 100) : 0;
+      const left = Math.max(0, (total - p.done) * 5 - 2);
+      const sub = [this.t("scanSub", { done: p.done, total, elapsed: Math.round(p.elapsed || 0) })];
+      if (!p.cancelling && left) sub.push(this.t("remaining", { s: left }));
+      if (p.cancelling) sub.push(this.t("stopHint"));
+      return `<div class="card scan-card" role="status" aria-live="polite">
+        <div class="sc-head">
+          <div class="sc-badge run">${icon("radar")}</div>
+          <div class="grow" style="flex:1"><div class="sc-title">${p.cancelling ? this.t("stopping") : this.t("scanRunning")}</div>
+            <div class="sc-sub">${esc(sub.join(" · "))}</div></div>
+          <button class="btn-outline danger" id="stop2" ${p.cancelling ? "disabled" : ""}>${icon("stop")}${this.t("stop")}</button>
+        </div>
+        <div class="sc-bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${Math.max(pct, 3)}%"></i></div>
+        <div class="sc-list">${(p.probes || []).map((it) => this._scanItemHtml(it)).join("")}</div>
+      </div>`;
+    }
+    const r = this._result;
+    if (!r) return "";
+    const time = new Date(r.time).toLocaleTimeString(this._lang, { hour: "2-digit", minute: "2-digit" });
+    let cls = "done", title = this.t("scanDone"), badge = "check";
+    let sub = this.t("resultSub", { time, networks: r.networks, ok: r.ok, total: r.total, duration: Math.round(r.duration) });
+    if (r.cancelled) {
+      cls = "stopped"; title = this.t("scanStopped"); badge = "stop";
+      sub = r.saved ? this.t("resultStopped", { time, ok: r.ok, total: r.total, networks: r.networks }) : `${time} · ${this.t("notSaved")}`;
+    } else if (!r.ok) {
+      cls = "failed"; title = this.t("scanFailed"); badge = "error";
+      sub = `${time} · ${this.t("notSaved")}`;
+    }
+    if (r.failed && r.ok) sub += ` · ${this.t("failedN", { n: r.failed })}`;
+    return `<div class="card scan-card ${cls}" role="status">
+      <div class="sc-head">
+        <div class="sc-badge">${icon(badge)}</div>
+        <div style="flex:1"><div class="sc-title">${title}</div><div class="sc-sub">${esc(sub)}</div></div>
+        <button class="icon-btn" id="result-close" title="${this.t("close")}" aria-label="${this.t("close")}" style="color:var(--wa-ink2)">${icon("close")}</button>
+      </div>
+    </div>`;
+  }
+
+  _scanItemHtml(it) {
+    const ic = { waiting: "clock", scanning: "radar", done: "check", error: "error", skipped: "skip" }[it.state] || "clock";
+    const st = it.state === "done" ? this.t("st_done", { n: it.networks, s: it.duration })
+      : it.state === "error" ? `${this.t("st_error")}: ${it.error || ""}` : this.t(`st_${it.state}`);
+    return `<div class="sc-item ${it.state}">${icon(ic)}
+      <div style="min-width:0"><div class="nm">${esc(it.name)}${it.area ? ` <span class="st">· ${esc(it.area)}</span>` : ""}</div>
+      <div class="st">${esc(st)}</div></div></div>`;
+  }
+
+  /** Aggiorna solo la scheda di avanzamento e il pulsante: i grafici restano fermi. */
+  _renderScanState() {
+    const root = this.shadowRoot;
+    const slot = root.getElementById("scan-slot");
+    const btn = root.getElementById("hero-btn");
+    if (!slot || !btn) { this._render(); return; }
+    slot.innerHTML = this._scanCardHtml();
+    btn.innerHTML = this._heroBtnHtml();
+    this._bindHero();
+    this._bindScanCard();
+    root.querySelectorAll(".probe").forEach((b) => { b.disabled = this._running; });
+  }
+
+  _bindScanCard() {
+    const root = this.shadowRoot;
+    root.getElementById("stop2")?.addEventListener("click", () => this._cancel());
+    root.getElementById("result-close")?.addEventListener("click", () => {
+      this._result = null;
+      root.getElementById("scan-slot").innerHTML = "";
     });
   }
 
@@ -1004,18 +1211,56 @@ class WifiAnalyzerPanel extends HTMLElement {
   _probesHtml() {
     const d = this._data;
     const results = new Map((d.last_scan?.probes || []).map((p) => [p.id, p]));
-    return `<div class="section-head"><div><h3>${this.t("probes")}</h3></div></div>
+    const n = d.probes.filter((p) => p.selected).length;
+    const secs = n ? n * 3 + (n - 1) * 2 : 0;
+    const dis = this._running || this._savingProbes ? "disabled" : "";
+    return `<div class="section-head"><div><h3>${this.t("probes")}</h3><p>${this.t("probesSub")}</p></div></div>
+      ${!n ? `<div class="warn-line">${icon("alert")}${this.t("noProbesSelected")}</div>` : ""}
+      <div class="probe-actions">
+        <button class="chip" data-sel="all" ${dis}>${this.t("selAll")}</button>
+        <button class="chip" data-sel="suggested" ${dis}>${this.t("selSuggested")}</button>
+        <button class="chip" data-sel="none" ${dis}>${this.t("selNone")}</button>
+        <span class="count">${this.t("selCount", { n, total: d.probes.length, s: secs })}</span>
+      </div>
       <div class="probe-grid">${d.probes.map((p) => {
         const r = results.get(p.id);
-        const status = !p.selected ? this.t("probeOff")
-          : r ? (r.ok ? this.t("probeOk", { n: r.networks, s: r.duration }) : `<span class="err">${esc(r.error)}</span>`) : "";
-        return `<div class="probe ${p.selected ? "" : "off"}">
+        const status = r ? (r.ok ? this.t("probeOk", { n: r.networks, s: r.duration }) : `<span class="err">${esc(r.error)}</span>`) : "";
+        return `<button class="probe ${p.selected ? "on" : ""}" data-id="${esc(p.id)}" role="switch" aria-checked="${p.selected}" ${dis}>
           <div class="pi">${icon(p.kind === "host" ? "server" : "chip")}</div>
-          <div><div class="pn">${esc(p.name)}</div>
-          <div class="pm">${esc([p.kind === "host" ? this.t("probeHost") : this.t("probeShelly"), p.area].filter(Boolean).join(" · "))}</div>
-          <div class="pm">${status}</div></div>
-        </div>`;
+          <div class="grow"><div class="pn">${esc(p.name)}</div>
+          <div class="pm">${esc([p.kind === "host" ? this.t("probeHost") : this.t("probeShelly"), p.area, p.rssi != null ? `${p.rssi} dBm` : null].filter(Boolean).join(" · "))}</div>
+          ${status ? `<div class="pm">${status}</div>` : ""}</div>
+          <span class="switch" aria-hidden="true"></span>
+        </button>`;
       }).join("")}</div>`;
+  }
+
+  _bindProbes() {
+    const root = this.shadowRoot;
+    const save = async (ids) => {
+      if (this._running || this._savingProbes) return;
+      this._savingProbes = true;
+      // Aggiornamento immediato a schermo, poi conferma dal server.
+      const set = new Set(ids);
+      this._data.probes.forEach((p) => { p.selected = set.has(p.id); });
+      this._render();
+      try {
+        this._data = await this._ws("set_probes", { probes: ids });
+      } catch (err) {
+        this._error = err.message || String(err);
+      }
+      this._savingProbes = false;
+      this._render();
+    };
+    root.querySelectorAll(".probe[data-id]").forEach((b) => b.addEventListener("click", () => {
+      const ids = this._data.probes.filter((p) => p.selected).map((p) => p.id);
+      const id = b.dataset.id;
+      save(ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]);
+    }));
+    root.querySelectorAll("[data-sel]").forEach((b) => b.addEventListener("click", () => {
+      const all = this._data.probes.map((p) => p.id);
+      save({ all, none: [], suggested: this._data.suggested_probes || [] }[b.dataset.sel]);
+    }));
   }
 }
 

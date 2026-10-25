@@ -24,13 +24,16 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
-from .const import AUTHOR, DOMAIN, INTEGRATION_NAME, VERSION
+from .const import AUTHOR, DEFAULT_SHELLY_PROBES, DOMAIN, INTEGRATION_NAME, VERSION
 from .coordinator import WifiAnalyzerCoordinator
+from .probes import default_probes
 
 WS_DATA = f"{DOMAIN}/data"
 WS_SCAN = f"{DOMAIN}/scan"
 WS_PROGRESS = f"{DOMAIN}/progress"
 WS_HISTORY = f"{DOMAIN}/history"
+WS_CANCEL = f"{DOMAIN}/cancel"
+WS_SET_PROBES = f"{DOMAIN}/set_probes"
 
 
 def _coordinator(hass: HomeAssistant) -> WifiAnalyzerCoordinator | None:
@@ -57,6 +60,8 @@ def _payload(coordinator: WifiAnalyzerCoordinator) -> dict[str, Any]:
             "name": INTEGRATION_NAME, "version": VERSION, "author": AUTHOR,
         },
         "probes": [{**p.as_dict(), "selected": p.probe_id in selected} for p in data.probes],
+        "suggested_probes": default_probes(data.probes, DEFAULT_SHELLY_PROBES),
+        "last_result": coordinator.last_result,
         "devices": data.devices,
         "own_ssids": data.own_ssids,
         "own_aps": data.own_aps,
@@ -70,7 +75,7 @@ def _payload(coordinator: WifiAnalyzerCoordinator) -> dict[str, Any]:
 
 @callback
 def async_register(hass: HomeAssistant) -> None:
-    for command in (ws_data, ws_scan, ws_progress, ws_history):
+    for command in (ws_data, ws_scan, ws_progress, ws_history, ws_cancel, ws_set_probes):
         websocket_api.async_register_command(hass, command)
 
 
@@ -88,19 +93,40 @@ def ws_data(hass, connection, msg) -> None:
 @websocket_api.websocket_command(
     {vol.Required("type"): WS_SCAN, vol.Optional("probes"): [str]}
 )
-@websocket_api.async_response
-async def ws_scan(hass, connection, msg) -> None:
-    """Esegue una scansione e risponde quando è finita."""
+@callback
+def ws_scan(hass, connection, msg) -> None:
+    """Avvia una scansione in background; il pannello segue l'avanzamento."""
     if (coordinator := _require(hass, connection, msg)) is None:
         return
-    try:
-        await coordinator.async_run_scan(msg.get("probes"))
-    except RuntimeError:
+    if not coordinator.async_start_scan(msg.get("probes")):
         connection.send_error(msg["id"], "scan_running", "Scansione già in corso")
         return
-    except Exception as err:  # noqa: BLE001 - il pannello deve sempre ricevere una risposta
-        connection.send_error(msg["id"], "scan_failed", str(err))
+    connection.send_result(msg["id"], {"started": True})
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required("type"): WS_CANCEL})
+@callback
+def ws_cancel(hass, connection, msg) -> None:
+    """Interrompe la scansione dopo la sonda in corso."""
+    if (coordinator := _require(hass, connection, msg)) is None:
         return
+    connection.send_result(msg["id"], {"cancelling": coordinator.async_cancel_scan()})
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {vol.Required("type"): WS_SET_PROBES, vol.Required("probes"): [str]}
+)
+@websocket_api.async_response
+async def ws_set_probes(hass, connection, msg) -> None:
+    """Salva le sonde scelte."""
+    if (coordinator := _require(hass, connection, msg)) is None:
+        return
+    if coordinator.scanning:
+        connection.send_error(msg["id"], "scan_running", "Scansione in corso")
+        return
+    await coordinator.async_set_probes(msg["probes"])
     connection.send_result(msg["id"], _payload(coordinator))
 
 
