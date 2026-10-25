@@ -53,8 +53,6 @@ def _probe_label(probe: Probe) -> str:
         parts.append(f"· {probe.area}")
     if probe.rssi is not None:
         parts.append(f"· {probe.rssi} dBm")
-    if probe.kind == PROBE_HOST:
-        parts.append("· 2,4 + 5 GHz")
     return " ".join(parts)
 
 

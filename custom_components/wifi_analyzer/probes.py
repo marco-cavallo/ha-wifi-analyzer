@@ -140,9 +140,9 @@ async def _discover_host(hass: HomeAssistant) -> list[Probe]:
                 probe_id=f"{PROBE_HOST}:{iface.interface}",
                 kind=PROBE_HOST,
                 name=f"Home Assistant ({iface.interface})",
-                # Le bande vere dipendono dalla scheda: lo sappiamo solo dopo
-                # la prima scansione.
-                bands=("2.4", "5"),
+                # Le bande vere dipendono dalla scheda: si vedono dalla prima
+                # scansione (una vecchia chiavetta 802.11g vede solo il 2,4 GHz).
+                bands=(),
                 disruptive=bool(iface.connected),
                 interface=iface.interface,
             )
@@ -250,8 +250,9 @@ async def _scan_host(hass: HomeAssistant, probe: Probe) -> list[Network]:
                 ssid=ap.ssid or "",
                 channel=channel,
                 # NetworkManager dà la qualità in percentuale, non i dBm:
-                # dBm = % / 2 - 100 è un'approssimazione (100% ≈ -50 dBm).
-                rssi=round(ap.signal / 2 - 100),
+                # nm_wifi_utils_level_to_quality() mappa -100..-40 dBm su
+                # 0..100% in modo lineare, qui si fa l'inverso (100% = -40 o più).
+                rssi=round(ap.signal * 0.6 - 100),
                 probe=probe.probe_id,
                 band=band_of(channel),
             )

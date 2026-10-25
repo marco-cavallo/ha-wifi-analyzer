@@ -1,7 +1,7 @@
 {
   "domain": "wifi_analyzer",
   "name": "Wi-Fi Analyzer",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "after_dependencies": [
     "hassio",
     "shelly",

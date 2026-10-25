@@ -165,6 +165,29 @@ class BandAnalysis:
         }
 
 
+def _octets(bssid: str) -> list[str]:
+    return bssid.lower().split(":")
+
+
+def is_sibling(bssid: str, own_bssids: set[str]) -> bool:
+    """BSSID virtuale di una radio di casa.
+
+    I router creano reti in più sulla stessa radio (backhaul mesh nascosto,
+    rete ospiti) con BSSID derivati dal principale: di solito cambiano il
+    primo byte (bit "locally administered") e il quarto, il resto resta
+    uguale. Esempio: a0:b1:c2:11:22:33 e a2:b1:c2:21:22:33. Sono la stessa
+    antenna, quindi non sono vicini che disturbano.
+    """
+    mine = _octets(bssid)
+    if len(mine) != 6:
+        return False
+    for own in own_bssids:
+        other = _octets(own)
+        if len(other) == 6 and mine != other and all(mine[i] == other[i] for i in (1, 2, 4, 5)):
+            return True
+    return False
+
+
 def _merge(networks: list[Network]) -> list[dict[str, Any]]:
     """Una voce per BSSID, con il segnale migliore e le sonde che la vedono."""
     merged: dict[str, dict[str, Any]] = {}
@@ -199,6 +222,10 @@ def analyze_band(
     result = BandAnalysis(band=band)
     for net in networks:
         net.own = net.bssid in own_bssids or (net.ssid in own_ssids and bool(net.ssid))
+    known = own_bssids | {n.bssid for n in networks if n.own}
+    for net in networks:
+        if not net.own and is_sibling(net.bssid, known):
+            net.own = True
     nets = [n for n in networks if n.band == band]
     probes = sorted({n.probe for n in nets})
     result.probes = probes

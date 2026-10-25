@@ -1224,7 +1224,8 @@ class WifiAnalyzerPanel extends HTMLElement {
       </div>
       <div class="probe-grid">${d.probes.map((p) => {
         const r = results.get(p.id);
-        const status = r ? (r.ok ? this.t("probeOk", { n: r.networks, s: r.duration }) : `<span class="err">${esc(r.error)}</span>`) : "";
+        const bands = r?.ok && r.bands?.length ? ` · ${r.bands.map((x) => this.t(x === "2.4" ? "band24" : "band5")).join(" + ")}` : "";
+        const status = r ? (r.ok ? this.t("probeOk", { n: r.networks, s: r.duration }) + esc(bands) : `<span class="err">${esc(r.error)}</span>`) : "";
         return `<button class="probe ${p.selected ? "on" : ""}" data-id="${esc(p.id)}" role="switch" aria-checked="${p.selected}" ${dis}>
           <div class="pi">${icon(p.kind === "host" ? "server" : "chip")}</div>
           <div class="grow"><div class="pn">${esc(p.name)}</div>
