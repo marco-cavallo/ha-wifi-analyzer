@@ -48,7 +48,10 @@ const I18N = {
     q_excellent: "Excellent", q_good: "Good", q_fair: "Fair", q_weak: "Weak", q_unknown: "No signal data",
     node: "Access point", area: "Area", source: "Source",
     probes: "Probes", probeOk: "{n} networks · {s} s", probeOff: "not selected", probeHost: "Server Wi-Fi card",
-    probeShelly: "Shelly", noBand: "No probe sees this band. A Wi-Fi card on the server (USB dongle or Raspberry Pi) adds 5 GHz.",
+    probeShelly: "Shelly", experimental: "experimental", experimentalHint: "Written from the documentation, not yet tested on a real device",
+    busy: "Measured occupancy", busyShort: "busy",
+    a_busy_only: "Channel {cur} is {busy}% busy", d_busy_only: "The active probes only measure how busy your own channel is: for a recommendation you need probes that see the neighbor networks.",
+    noBand: "No probe sees this band. A Wi-Fi card on the server (USB dongle or Raspberry Pi) adds 5 GHz.",
     empty: "Start the first scan: each probe looks at the air from its room.",
     a_keep: "Your channel is already the best choice", a_keep_close: "Stay where you are",
     a_change: "Move to channel {ch}", a_set_channel: "Use channel {ch}", a_no_data: "No data yet",
@@ -96,7 +99,10 @@ const I18N = {
     q_excellent: "Ottimo", q_good: "Buono", q_fair: "Discreto", q_weak: "Debole", q_unknown: "Senza dato",
     node: "Access point", area: "Stanza", source: "Origine",
     probes: "Sonde", probeOk: "{n} reti · {s} s", probeOff: "non selezionata", probeHost: "Scheda Wi-Fi del server",
-    probeShelly: "Shelly", noBand: "Nessuna sonda vede questa banda. Una scheda Wi-Fi sul server (chiavetta USB o Raspberry Pi) aggiunge il 5 GHz.",
+    probeShelly: "Shelly", experimental: "sperimentale", experimentalHint: "Scritta dalla documentazione, non ancora provata su un apparecchio vero",
+    busy: "Occupazione misurata", busyShort: "occ.",
+    a_busy_only: "Il canale {cur} è occupato al {busy}%", d_busy_only: "Le sonde attive misurano solo quanto è occupato il tuo canale: per un consiglio servono sonde che vedano le reti vicine.",
+    noBand: "Nessuna sonda vede questa banda. Una scheda Wi-Fi sul server (chiavetta USB o Raspberry Pi) aggiunge il 5 GHz.",
     empty: "Avvia la prima scansione: ogni sonda guarda l'aria dalla sua stanza.",
     a_keep: "Il tuo canale è già la scelta migliore", a_keep_close: "Resta dove sei",
     a_change: "Passa al canale {ch}", a_set_channel: "Usa il canale {ch}", a_no_data: "Ancora nessun dato",
@@ -156,6 +162,28 @@ Object.assign(P, {
   error: "M13,13H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z",
 });
 const icon = (name, cls = "") => `<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${P[name]}"/></svg>`;
+
+Object.assign(P, {
+  router: "M20.2,5.9L21,5.1C19.6,3.7 17.8,3 16,3C14.2,3 12.4,3.7 11,5.1L11.8,5.9C13,4.8 14.5,4.2 16,4.2C17.5,4.2 19,4.8 20.2,5.9M19.3,6.7C18.4,5.8 17.2,5.3 16,5.3C14.8,5.3 13.6,5.8 12.7,6.7L13.5,7.5C14.2,6.8 15.1,6.5 16,6.5C16.9,6.5 17.8,6.8 18.5,7.5L19.3,6.7M19,13H17V9H15V13H5A2,2 0 0,0 3,15V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V15A2,2 0 0,0 19,13M8,18H6V16H8V18M11.5,18H9.5V16H11.5V18M15,18H13V16H15V18Z",
+  flask: "M5,19A1,1 0 0,0 6,20H18A1,1 0 0,0 19,19C19,18.79 18.93,18.59 18.82,18.43L13,8.35V4H11V8.35L5.18,18.43C5.07,18.59 5,18.79 5,19M6,22A3,3 0 0,1 3,19C3,18.4 3.18,17.84 3.5,17.37L9,7.81V6A1,1 0 0,1 8,5V4A2,2 0 0,1 10,2H14A2,2 0 0,1 16,4V5A1,1 0 0,1 15,6V7.81L20.5,17.37C20.82,17.84 21,18.4 21,19A3,3 0 0,1 18,22H6Z",
+});
+
+// Etichetta e icona per tipo di sonda.
+const KINDS = {
+  host: { label: { it: "Scheda Wi-Fi del server", en: "Server Wi-Fi card" }, icon: "server" },
+  shelly: { label: { it: "Shelly", en: "Shelly" }, icon: "chip" },
+  esphome: { label: { it: "ESPHome", en: "ESPHome" }, icon: "chip" },
+  tasmota: { label: { it: "Tasmota", en: "Tasmota" }, icon: "chip" },
+  wled: { label: { it: "WLED", en: "WLED" }, icon: "chip" },
+  cudy: { label: { it: "Router Cudy", en: "Cudy router" }, icon: "router" },
+  unifi: { label: { it: "UniFi", en: "UniFi" }, icon: "router" },
+  omada: { label: { it: "TP-Link Omada", en: "TP-Link Omada" }, icon: "router" },
+  openwrt: { label: { it: "OpenWrt", en: "OpenWrt" }, icon: "router" },
+  mikrotik: { label: { it: "MikroTik", en: "MikroTik" }, icon: "router" },
+  freebox: { label: { it: "Freebox / Iliadbox", en: "Freebox / Iliadbox" }, icon: "router" },
+  fritz: { label: { it: "FRITZ!Box", en: "FRITZ!Box" }, icon: "router" },
+  asus: { label: { it: "Router ASUS", en: "ASUS router" }, icon: "router" },
+};
 
 const QUALITY_ICON = { excellent: "check", good: "check", fair: "info", weak: "alert", unknown: "info" };
 
@@ -348,6 +376,10 @@ th.num { text-align: right; }
 .probe .pn { font-weight: 600; font-size: 13.5px; }
 .probe .pm { font-size: 12px; color: var(--wa-ink2); }
 .probe .err { color: var(--wa-crit); }
+.exp { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; color: var(--wa-ink2); background: color-mix(in srgb, var(--wa-muted) 16%, transparent); border-radius: 99px; padding: 1px 7px 1px 5px; margin-left: 4px; vertical-align: 1px; }
+.exp .ic { width: 12px; height: 12px; }
+.busy-val { font-size: 10.5px; fill: var(--wa-ink2); font-variant-numeric: tabular-nums; }
+.busy-lbl { font-size: 10.5px; fill: var(--wa-muted); }
 
 .empty { padding: 48px 20px; text-align: center; color: var(--wa-ink2); }
 .empty .big { width: 64px; height: 64px; margin: 0 auto 12px; border-radius: 20px; display: grid; place-items: center; background: var(--wa-wash); color: var(--wa-own); }
@@ -878,6 +910,7 @@ class WifiAnalyzerPanel extends HTMLElement {
     const vars = {
       ch: b.recommended, cur: b.current, to: b.recommended_score, from: b.current_score,
       best: best?.channel, gain: best && b.current_score != null ? best.score - b.current_score : "",
+      busy: Math.round((b.channels || []).find((c) => c.channel === b.current)?.busy ?? 0),
     };
     const warnings = (b.warnings || []).map((w) => {
       const key = `w_${w.code}`;
@@ -1067,7 +1100,10 @@ class WifiAnalyzerPanel extends HTMLElement {
     const b = this._bandData();
     const ax = this._axis();
     const chans = b.channels || [];
-    const W = this._chartW, H = this._compact ? 170 : 200, L = 40, R = 10, T = 22, B = 30;
+    // Riga in più sotto l'asse quando qualche sonda misura l'occupazione.
+    const hasBusy = chans.some((c) => c.busy != null);
+    const W = this._chartW, L = 40, R = 10, T = 22, B = hasBusy ? 48 : 30;
+    const H = (this._compact ? 170 : 200) + (hasBusy ? 18 : 0);
     const x = (v) => L + ((v - ax.min) / (ax.max - ax.min)) * (W - L - R);
     const y = (s) => T + (1 - s / 100) * (H - T - B);
     const step = x(ax.pos(chans[1]?.channel ?? 2)) - x(ax.pos(chans[0]?.channel ?? 1));
@@ -1090,6 +1126,7 @@ class WifiAnalyzerPanel extends HTMLElement {
       return `<g><path class="bar-n ${cls}" data-i="${i}" d="${d}"/>${ring}
         ${showVal ? `<text class="bar-val" x="${cx}" y="${top - 7}" text-anchor="middle">${c.score}</text>` : ""}
         <text class="tick ${c.channel === b.current || c.channel === b.recommended ? "on" : ""}" x="${cx}" y="${H - B + 18}" text-anchor="middle">${c.channel}</text>
+        ${c.busy != null ? `<text class="busy-val" x="${cx}" y="${H - B + 36}" text-anchor="middle">${Math.round(c.busy)}%</text>` : ""}
         <rect class="hit" data-i="${i}" x="${cx - step / 2}" y="${T}" width="${step}" height="${H - T - B}"/></g>`;
     }).join("");
 
@@ -1101,6 +1138,7 @@ class WifiAnalyzerPanel extends HTMLElement {
       </div>
       <div class="chart" id="scores">
         <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${this.t("scores")}">${grid}
+          ${hasBusy ? `<text class="busy-lbl" x="${L - 8}" y="${H - B + 36}" text-anchor="end">${this.t("busyShort")}</text>` : ""}
           <line class="baseline" x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}"/>${bars}</svg>
         <div class="tip" id="score-tip"></div>
       </div>`;
@@ -1122,6 +1160,7 @@ class WifiAnalyzerPanel extends HTMLElement {
           <dl>
             <dt>${this.t("worst")}</dt><dd>${c.worst_score}</dd>
             <dt>${this.t("networksOn")}</dt><dd>${c.networks}</dd>
+            ${c.busy != null ? `<dt>${this.t("busy")}</dt><dd>${c.busy}%</dd>` : ""}
           </dl>`);
       });
       r.addEventListener("pointerleave", () => {
@@ -1227,9 +1266,10 @@ class WifiAnalyzerPanel extends HTMLElement {
         const bands = r?.ok && r.bands?.length ? ` · ${r.bands.map((x) => this.t(x === "2.4" ? "band24" : "band5")).join(" + ")}` : "";
         const status = r ? (r.ok ? this.t("probeOk", { n: r.networks, s: r.duration }) + esc(bands) : `<span class="err">${esc(r.error)}</span>`) : "";
         return `<button class="probe ${p.selected ? "on" : ""}" data-id="${esc(p.id)}" role="switch" aria-checked="${p.selected}" ${dis}>
-          <div class="pi">${icon(p.kind === "host" ? "server" : "chip")}</div>
+          <div class="pi">${icon(KINDS[p.kind]?.icon || "chip")}</div>
           <div class="grow"><div class="pn">${esc(p.name)}</div>
-          <div class="pm">${esc([p.kind === "host" ? this.t("probeHost") : this.t("probeShelly"), p.area, p.rssi != null ? `${p.rssi} dBm` : null].filter(Boolean).join(" · "))}</div>
+          <div class="pm">${esc([KINDS[p.kind]?.label[this._lang] || p.kind, p.area, p.rssi != null ? `${p.rssi} dBm` : null].filter(Boolean).join(" · "))}
+            ${p.experimental ? `<span class="exp" title="${esc(this.t("experimentalHint"))}">${icon("flask")}${this.t("experimental")}</span>` : ""}</div>
           ${status ? `<div class="pm">${status}</div>` : ""}</div>
           <span class="switch" aria-hidden="true"></span>
         </button>`;

@@ -17,7 +17,7 @@
   },
   "options": {
     "step": {
-      "init": {
+      "settings": {
         "title": "Settings",
         "data": {
           "probes": "Probes",
@@ -30,6 +30,24 @@
           "own_ssids": "Empty: detected from the connected devices.",
           "scan_hours": "0 = on demand only. Each scan takes the Shelly probes off Wi-Fi for a few seconds.",
           "channel_plan": "1-6-11 is the standard. 1-5-9-13 is used in Europe where no neighbor follows 1-6-11."
+        }
+      },
+      "init": {
+        "title": "Wi-Fi Analyzer",
+        "menu_options": {
+          "settings": "Settings",
+          "openwrt": "OpenWrt routers"
+        }
+      },
+      "openwrt": {
+        "title": "OpenWrt routers",
+        "description": "For OpenWrt routers without an integration in Home Assistant. Needs LuCI (or uhttpd with ubus). root works out of the box; another user needs an rpcd ACL for iwinfo (see README).",
+        "data": {
+          "host": "Address",
+          "username": "Username",
+          "password": "Password",
+          "ssl": "HTTPS",
+          "remove": "Remove"
         }
       }
     }

@@ -16,14 +16,74 @@ No cloud service, no extra hardware required, no Python dependencies.
 
 ## Probes
 
-The integration discovers its probes on its own:
+The integration finds its probes among the integrations you already configured, and uses their connections and credentials.
 
-| Probe | Bands | Requirements |
-|---|---|---|
-| **Server Wi-Fi card** (Raspberry Pi, mini PC, USB dongle) | 2.4 GHz and 5 GHz, if the card supports them | Home Assistant OS or Supervised |
-| **Shelly Gen2, Gen3, Gen4** | 2.4 GHz | Configured with the official Shelly integration, mains powered |
+| Probe | Neighbor networks | Occupancy | Tested | Experimental |
+|---|---|---|---|---|
+| Server Wi-Fi card (Raspberry Pi, mini PC, USB dongle) | 2,4/5 GHz | — | ✓ |  |
+| Cudy router (cudy_m3000 integration) | 2,4 + 5 GHz | — | ✓ |  |
+| Shelly Gen2/Gen3/Gen4 | 2,4 GHz | — | ✓ |  |
+| UniFi Network | 2,4 + 5 GHz | ✓ |  | ✓ |
+| TP-Link Omada | 2,4 + 5 GHz | ✓ |  | ✓ |
+| OpenWrt (ubus) | 2,4 + 5 GHz | ✓ |  | ✓ |
+| MikroTik RouterOS | 2,4 + 5 GHz | — |  | ✓ |
+| FRITZ!Box | occupancy only | ✓ |  | ✓ |
+| Freebox / Iliadbox | 2,4 + 5 GHz | ✓ |  | ✓ |
+| ASUS (Asuswrt, Merlin, AsusRouter) | 2,4 + 5 GHz | ✓ (SSH) |  | ✓ |
+| ESPHome (with the YAML block below) | 2,4 GHz | — |  | ✓ |
+| Tasmota ≥ 12.1 | 2,4 GHz | — |  | ✓ |
+| WLED ≥ 0.14 | 2,4 GHz | — |  | ✓ |
 
-More probes in different rooms give a better picture: the right channel is the one that works everywhere, not only next to the router. A Shelly leaves Wi-Fi for about 3 seconds while scanning, so the integration scans one probe at a time and proposes one per room by default.
+"Experimental" = written from the documentation and source code, not yet tested on a real device: reports welcome.
+
+Probes that leave Wi-Fi to scan (Shelly, ESPHome, Tasmota, WLED) are used one at a time; routers are not, they read data they collect anyway. Scans that take Wi-Fi down (UniFi spectrum scan, Omada RF scan, MikroTik frequency-scan) are never used.
+
+### ESPHome
+
+Add this block to the device YAML (ESPHome ≥ 2026.10): the probe shows up by itself.
+
+```yaml
+text_sensor:
+  - platform: wifi_info
+    scan_results:
+      name: "Wi-Fi scan results"
+      internal: true   # keeps the full scan results in memory
+
+api:
+  actions:
+    - action: wifi_scan
+      supports_response: only
+      then:
+        - wifi.roam:      # triggers a fresh scan (skipped if the signal is above -49 dBm)
+        - delay: 6s
+        - api.respond:
+            data: !lambda |-
+              auto aps = root["aps"].to<JsonArray>();
+              for (auto &r : wifi::global_wifi_component->get_scan_result()) {
+                auto o = aps.add<JsonObject>();
+                o["ssid"] = r.get_ssid().c_str();
+                const auto &m = r.get_bssid();
+                char b[18];
+                snprintf(b, sizeof(b), "%02X:%02X:%02X:%02X:%02X:%02X", m[0], m[1], m[2], m[3], m[4], m[5]);
+                o["bssid"] = b;
+                o["channel"] = r.get_channel();
+                o["rssi"] = r.get_rssi();
+              }
+```
+
+### OpenWrt
+
+If an OpenWrt integration (luci, openwrt, openwrt_ubus) is already configured its credentials are used, otherwise add the router from the options. root works out of the box; for another user create `/usr/share/rpcd/acl.d/wifi-analyzer.json`, add `list read 'wifi-analyzer'` and `list write 'wifi-analyzer'` to its `config login` in `/etc/config/rpcd` and restart rpcd:
+
+```json
+{
+  "wifi-analyzer": {
+    "description": "Wi-Fi Analyzer",
+    "read": { "ubus": { "iwinfo": ["devices", "info", "survey", "scan", "assoclist"] } },
+    "write": { "ubus": { "iwinfo": ["scan"] } }
+  }
+}
+```
 
 ## What it shows
 
@@ -44,7 +104,7 @@ More probes in different rooms give a better picture: the right channel is the o
 ## Limits
 
 - A scan sees access points, not traffic: a quiet neighbor weighs like a busy one. The score is an estimate.
-- Shelly probes only see 2.4 GHz. For 5 GHz you need a Wi-Fi card on the Home Assistant server.
+- Shelly, ESPHome, Tasmota and WLED only see 2.4 GHz. 5 GHz comes from routers and from the server Wi-Fi card, if dual band.
 - The integration does not change the channel on your router: every brand is different. It tells you what to set.
 
 ## Installation

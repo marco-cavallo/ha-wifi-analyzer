@@ -153,7 +153,10 @@ class WifiAnalyzerCoordinator(DataUpdateCoordinator[AnalyzerData]):
     async def _async_update_data(self) -> AnalyzerData:
         probes = await async_discover(self.hass)
         devices = wifi_devices.collect(self.hass)
-        own_ssids = self._own_ssids(devices)
+        last = self.history[-1] if self.history else None
+        # Access point dichiarati dai router: sono nostri per definizione.
+        router_aps = last.get("own_aps", []) if last else []
+        own_ssids = self._own_ssids(devices, router_aps)
         own_bssids = {
             d.bssid for d in devices if d.bssid and d.ssid and d.ssid in own_ssids
         }
@@ -162,13 +165,17 @@ class WifiAnalyzerCoordinator(DataUpdateCoordinator[AnalyzerData]):
             if d.channel and d.ssid in own_ssids and d.available
         ]
 
-        last = self.history[-1] if self.history else None
         networks = [Network(**n) for n in last["networks"]] if last else []
         # I BSSID visti nelle scansioni col nostro SSID sono nodi nostri anche se
         # nessun dispositivo noto ci è collegato.
         own_bssids |= {n.bssid for n in networks if n.ssid in own_ssids}
+        own_bssids |= {a["bssid"] for a in router_aps if a.get("bssid")}
+        channels_hint += [a["channel"] for a in router_aps if a.get("channel")]
         plan = self.config_entry.options.get(CONF_CHANNEL_PLAN, DEFAULT_PLAN_24)
-        bands = analyze(networks, own_bssids, set(own_ssids), plan, channels_hint)
+        bands = analyze(
+            networks, own_bssids, set(own_ssids), plan, channels_hint,
+            last.get("utilization") if last else None,
+        )
 
         return AnalyzerData(
             probes=probes,
@@ -179,8 +186,9 @@ class WifiAnalyzerCoordinator(DataUpdateCoordinator[AnalyzerData]):
             last_scan=self._scan_summary(last),
         )
 
-    def _own_ssids(self, devices) -> list[str]:
-        """Le reti di casa: scelte dall'utente o, di default, quelle dei dispositivi."""
+    def _own_ssids(self, devices, router_aps: list[dict[str, Any]]) -> list[str]:
+        """Le reti di casa: scelte dall'utente o, di default, quelle dei
+        dispositivi e quelle che i router dichiarano come proprie."""
         configured = self.config_entry.options.get(CONF_OWN_SSIDS) or []
         if configured:
             return list(configured)
@@ -188,6 +196,9 @@ class WifiAnalyzerCoordinator(DataUpdateCoordinator[AnalyzerData]):
         for device in devices:
             if device.ssid:
                 counts[device.ssid] = counts.get(device.ssid, 0) + 1
+        for ap in router_aps:
+            if ap.get("ssid"):
+                counts[ap["ssid"]] = counts.get(ap["ssid"], 0) + 1
         return sorted(counts, key=lambda s: -counts[s])
 
     @staticmethod
@@ -295,6 +306,8 @@ class WifiAnalyzerCoordinator(DataUpdateCoordinator[AnalyzerData]):
             )
             self.async_update_listeners()
             networks: list[Network] = []
+            utilization: list[dict[str, Any]] = []
+            own_aps: list[dict[str, Any]] = []
             results: list[dict[str, Any]] = []
             cancelled = False
             try:
@@ -308,8 +321,11 @@ class WifiAnalyzerCoordinator(DataUpdateCoordinator[AnalyzerData]):
                     self.async_update_listeners()
                     started = time.monotonic()
                     try:
-                        found = await async_scan(self.hass, probe)
+                        result = await async_scan(self.hass, probe)
+                        found = result.networks
                         networks.extend(found)
+                        utilization.extend({**u, "probe": probe.probe_id} for u in result.utilization)
+                        own_aps.extend(result.own_aps)
                         item.update(state="done", networks=len(found),
                                     duration=round(time.monotonic() - started, 1))
                         results.append({
@@ -337,6 +353,8 @@ class WifiAnalyzerCoordinator(DataUpdateCoordinator[AnalyzerData]):
                 "duration": duration,
                 "probes": results,
                 "networks": [n.as_dict() for n in networks],
+                "utilization": utilization,
+                "own_aps": own_aps,
                 "cancelled": cancelled,
             }
             if networks:

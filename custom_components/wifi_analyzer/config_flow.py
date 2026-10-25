@@ -36,6 +36,7 @@ from .const import (
     CONF_OWN_SSIDS,
     CONF_PANEL,
     CONF_PROBES,
+    CONF_ROUTERS,
     CONF_SCAN_HOURS,
     DEFAULT_PANEL,
     DEFAULT_SCAN_HOURS,
@@ -126,9 +127,47 @@ class WifiAnalyzerOptionsFlow(OptionsFlow):
     """Opzioni: sonde, reti di casa, scansioni automatiche."""
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        return self.async_show_menu(step_id="init", menu_options=["settings", "openwrt"])
+
+    async def async_step_openwrt(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Router OpenWrt senza integrazione in Home Assistant: indirizzo e credenziali."""
+        options = dict(self.config_entry.options)
+        routers = [r for r in options.get(CONF_ROUTERS, []) if r.get("type") == "openwrt"]
+        if user_input is not None:
+            keep = [r for r in routers if r["host"] not in user_input.get("remove", [])]
+            host = (user_input.get("host") or "").strip()
+            if host:
+                keep = [r for r in keep if r["host"] != host]
+                keep.append({
+                    "type": "openwrt", "host": host,
+                    "username": user_input.get("username") or "root",
+                    "password": user_input.get("password") or "",
+                    "ssl": bool(user_input.get("ssl")),
+                })
+            others = [r for r in options.get(CONF_ROUTERS, []) if r.get("type") != "openwrt"]
+            return self.async_create_entry(data={**options, CONF_ROUTERS: others + keep})
+
+        schema: dict[Any, Any] = {
+            vol.Optional("host"): selector.TextSelector(),
+            vol.Optional("username", default="root"): selector.TextSelector(),
+            vol.Optional("password"): selector.TextSelector(
+                selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+            ),
+            vol.Optional("ssl", default=False): selector.BooleanSelector(),
+        }
+        if routers:
+            schema[vol.Optional("remove", default=[])] = selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[r["host"] for r in routers], multiple=True,
+                    mode=selector.SelectSelectorMode.LIST,
+                )
+            )
+        return self.async_show_form(step_id="openwrt", data_schema=vol.Schema(schema))
+
+    async def async_step_settings(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         if user_input is not None:
             user_input[CONF_SCAN_HOURS] = int(user_input.get(CONF_SCAN_HOURS, 0))
-            return self.async_create_entry(data=user_input)
+            return self.async_create_entry(data={**self.config_entry.options, **user_input})
 
         options = self.config_entry.options
         probes = await async_discover(self.hass)
@@ -172,4 +211,4 @@ class WifiAnalyzerOptionsFlow(OptionsFlow):
                 ): selector.BooleanSelector(),
             }
         )
-        return self.async_show_form(step_id="init", data_schema=schema)
+        return self.async_show_form(step_id="settings", data_schema=schema)

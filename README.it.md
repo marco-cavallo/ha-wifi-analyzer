@@ -16,14 +16,74 @@ Nessun servizio cloud, nessun hardware aggiuntivo obbligatorio, nessuna dipenden
 
 ## Sonde
 
-L'integrazione trova le sonde da sola:
+L'integrazione trova le sonde da sola fra le integrazioni già configurate, e usa le loro connessioni e credenziali.
 
-| Sonda | Bande | Requisiti |
-|---|---|---|
-| **Scheda Wi-Fi del server** (Raspberry Pi, mini PC, chiavetta USB) | 2,4 GHz e 5 GHz, se la scheda li supporta | Home Assistant OS o Supervised |
-| **Shelly Gen2, Gen3, Gen4** | 2,4 GHz | Configurati con l'integrazione Shelly ufficiale, alimentati a rete |
+| Sonda | Reti vicine | Occupazione | Provata | Sperimentale |
+|---|---|---|---|---|
+| Scheda Wi-Fi del server (Raspberry Pi, mini PC, chiavetta USB) | 2,4/5 GHz | — | ✓ |  |
+| Router Cudy (integrazione cudy_m3000) | 2,4 + 5 GHz | — | ✓ |  |
+| Shelly Gen2/Gen3/Gen4 | 2,4 GHz | — | ✓ |  |
+| UniFi Network | 2,4 + 5 GHz | ✓ |  | ✓ |
+| TP-Link Omada | 2,4 + 5 GHz | ✓ |  | ✓ |
+| OpenWrt (ubus) | 2,4 + 5 GHz | ✓ |  | ✓ |
+| MikroTik RouterOS | 2,4 + 5 GHz | — |  | ✓ |
+| FRITZ!Box | solo occupazione | ✓ |  | ✓ |
+| Freebox / Iliadbox | 2,4 + 5 GHz | ✓ |  | ✓ |
+| ASUS (Asuswrt, Merlin, AsusRouter) | 2,4 + 5 GHz | ✓ (SSH) |  | ✓ |
+| ESPHome (con il blocco YAML qui sotto) | 2,4 GHz | — |  | ✓ |
+| Tasmota ≥ 12.1 | 2,4 GHz | — |  | ✓ |
+| WLED ≥ 0.14 | 2,4 GHz | — |  | ✓ |
 
-Più sonde in stanze diverse danno un quadro migliore: il canale giusto è quello che va bene ovunque, non solo vicino al router. Durante la scansione uno Shelly si stacca dal Wi-Fi per circa 3 secondi, quindi l'integrazione usa una sonda alla volta e di default ne propone una per stanza.
+"Sperimentale" = scritta seguendo la documentazione e il codice sorgente, non ancora provata su un apparecchio vero: segnalazioni benvenute.
+
+Le sonde che si staccano dal Wi-Fi per scansionare (Shelly, ESPHome, Tasmota, WLED) vengono usate una alla volta; i router no: leggono dati che raccolgono da soli. Le scansioni che fanno cadere il Wi-Fi (spectrum scan di UniFi, RF scan di Omada, frequency-scan di MikroTik) non vengono mai usate.
+
+### ESPHome
+
+Aggiungi questo blocco al YAML del dispositivo (ESPHome ≥ 2026.10): la sonda compare da sola.
+
+```yaml
+text_sensor:
+  - platform: wifi_info
+    scan_results:
+      name: "Wi-Fi scan results"
+      internal: true   # keeps the full scan results in memory
+
+api:
+  actions:
+    - action: wifi_scan
+      supports_response: only
+      then:
+        - wifi.roam:      # triggers a fresh scan (skipped if the signal is above -49 dBm)
+        - delay: 6s
+        - api.respond:
+            data: !lambda |-
+              auto aps = root["aps"].to<JsonArray>();
+              for (auto &r : wifi::global_wifi_component->get_scan_result()) {
+                auto o = aps.add<JsonObject>();
+                o["ssid"] = r.get_ssid().c_str();
+                const auto &m = r.get_bssid();
+                char b[18];
+                snprintf(b, sizeof(b), "%02X:%02X:%02X:%02X:%02X:%02X", m[0], m[1], m[2], m[3], m[4], m[5]);
+                o["bssid"] = b;
+                o["channel"] = r.get_channel();
+                o["rssi"] = r.get_rssi();
+              }
+```
+
+### OpenWrt
+
+Se c'è già un'integrazione OpenWrt (luci, openwrt, openwrt_ubus) si usano le sue credenziali, altrimenti si aggiunge il router dalle opzioni. Con root funziona subito; con un altro utente crea `/usr/share/rpcd/acl.d/wifi-analyzer.json`, aggiungi `list read 'wifi-analyzer'` e `list write 'wifi-analyzer'` al suo `config login` in `/etc/config/rpcd` e riavvia rpcd:
+
+```json
+{
+  "wifi-analyzer": {
+    "description": "Wi-Fi Analyzer",
+    "read": { "ubus": { "iwinfo": ["devices", "info", "survey", "scan", "assoclist"] } },
+    "write": { "ubus": { "iwinfo": ["scan"] } }
+  }
+}
+```
 
 ## Cosa mostra
 
@@ -44,7 +104,7 @@ Più sonde in stanze diverse danno un quadro migliore: il canale giusto è quell
 ## Limiti
 
 - La scansione vede gli access point, non il traffico: un vicino inattivo pesa come uno che sta guardando un film. Il punteggio è una stima.
-- Le sonde Shelly vedono solo il 2,4 GHz. Per il 5 GHz serve una scheda Wi-Fi sul server Home Assistant.
+- Shelly, ESPHome, Tasmota e WLED vedono solo il 2,4 GHz. Il 5 GHz arriva dai router e dalla scheda Wi-Fi del server, se dual band.
 - L'integrazione non cambia il canale sul router: ogni marca è diversa. Ti dice cosa impostare.
 
 ## Installazione

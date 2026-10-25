@@ -17,7 +17,7 @@
   },
   "options": {
     "step": {
-      "init": {
+      "settings": {
         "title": "Impostazioni",
         "data": {
           "probes": "Sonde",
@@ -30,6 +30,24 @@
           "own_ssids": "Vuoto: le riconosco dai dispositivi collegati.",
           "scan_hours": "0 = solo a comando. Ogni scansione stacca le sonde Shelly dal Wi-Fi per qualche secondo.",
           "channel_plan": "1-6-11 è lo standard. 1-5-9-13 si usa in Europa dove nessun vicino segue 1-6-11."
+        }
+      },
+      "init": {
+        "title": "Wi-Fi Analyzer",
+        "menu_options": {
+          "settings": "Impostazioni",
+          "openwrt": "Router OpenWrt"
+        }
+      },
+      "openwrt": {
+        "title": "Router OpenWrt",
+        "description": "Per i router OpenWrt che non hanno già un'integrazione in Home Assistant. Serve LuCI (o uhttpd con ubus). Con root funziona subito; con un altro utente serve un ACL rpcd per iwinfo (vedi README).",
+        "data": {
+          "host": "Indirizzo",
+          "username": "Utente",
+          "password": "Password",
+          "ssl": "HTTPS",
+          "remove": "Rimuovi"
         }
       }
     }

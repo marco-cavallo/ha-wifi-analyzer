@@ -48,6 +48,9 @@ RSSI_STRONG = -50
 # Punti di punteggio sotto i quali non vale la pena cambiare canale: ogni
 # cambio fa ricollegare tutti i dispositivi.
 MIN_GAIN = 15
+# Peso dell'occupazione misurata: un canale occupato al 100% pesa come una
+# rete forte e mezza sullo stesso canale.
+BUSY_WEIGHT = 1.5
 
 
 @dataclass(slots=True)
@@ -212,6 +215,7 @@ def analyze_band(
     own_ssids: set[str],
     plan_24: str = DEFAULT_PLAN_24,
     own_channels_hint: list[int] | None = None,
+    utilization: list[dict[str, Any]] | None = None,
 ) -> BandAnalysis:
     """Analizza una banda.
 
@@ -228,8 +232,11 @@ def analyze_band(
             net.own = True
     nets = [n for n in networks if n.band == band]
     probes = sorted({n.probe for n in nets})
-    result.probes = probes
-    if not probes:
+    # Sonde che misurano solo l'occupazione (FRITZ!Box): contano per dire
+    # che la banda ha dati, non per la media delle reti vicine.
+    busy_probes = sorted({u.get("probe") for u in utilization or [] if u.get("band") == band} - {None} - set(probes))
+    result.probes = probes + busy_probes
+    if not result.probes:
         return result
 
     candidates = CHANNELS_24 if band == BAND_24 else CHANNELS_5
@@ -257,11 +264,20 @@ def analyze_band(
     else:
         preferred = [c for c in CHANNELS_5 if c not in DFS_5 and c != 165]
 
+    # Occupazione misurata (router, sniffer): media per canale tra chi la misura.
+    busy: dict[int, list[float]] = {}
+    for item in utilization or []:
+        if item.get("band") == band and item.get("busy") is not None:
+            busy.setdefault(int(item["channel"]), []).append(float(item["busy"]))
+    busy_avg = {ch: sum(v) / len(v) for ch, v in busy.items()}
+
     for ch in candidates:
-        loads = [per_probe[p][ch] for p in probes]
-        load = sum(loads) / len(loads)
-        worst = max(loads)
+        loads = [per_probe[p][ch] for p in probes] or [0.0]
+        extra = busy_avg.get(ch, 0.0) / 100 * BUSY_WEIGHT
+        load = sum(loads) / len(loads) + extra
+        worst = max(loads) + extra
         result.channels.append({
+            "busy": round(busy_avg[ch], 1) if ch in busy_avg else None,
             "channel": ch,
             "load": round(load, 3),
             "score": score_from_load(load),
@@ -277,6 +293,14 @@ def analyze_band(
     if own_channels:
         result.current = Counter(own_channels).most_common(1)[0][0]
         result.current_score = by_channel.get(result.current, {}).get("score")
+
+    if not probes:
+        # Solo occupazione misurata sui canali in uso: dice quanto è pieno il
+        # proprio canale ma non quale sarebbe meglio (gli altri non sono misurati).
+        result.channels = [c for c in result.channels if c["busy"] is not None]
+        result.advice = "busy_only"
+        result.width = None
+        return result
 
     best = max(
         (by_channel[c] for c in preferred if c in by_channel),
@@ -365,11 +389,12 @@ def analyze(
     own_ssids: set[str],
     plan_24: str = DEFAULT_PLAN_24,
     own_channels_hint: list[int] | None = None,
+    utilization: list[dict[str, Any]] | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Analizza tutte le bande disponibili."""
     return {
         band: analyze_band(
-            band, networks, own_bssids, own_ssids, plan_24, own_channels_hint
+            band, networks, own_bssids, own_ssids, plan_24, own_channels_hint, utilization
         ).as_dict()
         for band in (BAND_24, BAND_5)
     }

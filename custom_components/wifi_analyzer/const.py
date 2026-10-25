@@ -23,13 +23,16 @@ from typing import Final
 DOMAIN: Final = "wifi_analyzer"
 INTEGRATION_NAME: Final = "Wi-Fi Analyzer"
 AUTHOR: Final = "Marco Cavallo"
-VERSION: Final = "0.1.2"
+VERSION: Final = "0.2.0"
 
 CONF_PROBES: Final = "probes"
 CONF_OWN_SSIDS: Final = "own_ssids"
 CONF_SCAN_HOURS: Final = "scan_hours"
 CONF_CHANNEL_PLAN: Final = "channel_plan"
 CONF_PANEL: Final = "panel"
+# Router aggiunti a mano (OpenWrt senza integrazione): lista di dict
+# {"type", "host", "username", "password", "ssl", "port"}.
+CONF_ROUTERS: Final = "routers"
 
 # 0 = solo a comando. Ogni scansione disturba per qualche secondo le sonde
 # Shelly, quindi niente scansioni frequenti di default.
