@@ -133,7 +133,31 @@ async def async_scan(hass: HomeAssistant, probe: Probe) -> ScanResult:
                     band=band_of(channel),
                 )
             )
-    return ScanResult(networks=networks)
+    return ScanResult(networks=networks, own_aps=_own_aps(hass, probe.entry_id))
+
+
+def _own_aps(hass: HomeAssistant, entry_id: str | None) -> list[dict]:
+    """Canali dei nodi del mesh, dai dati che l'integrazione Cudy ha già.
+
+    La scansione del router non vede le sue stesse reti: senza questo il
+    canale attuale del 5 GHz resterebbe sconosciuto. I BSSID dei nodi li
+    riconosce l'analisi (regola dei BSSID "fratelli").
+    """
+    aps = []
+    for entry in loaded_entries(hass, DOMAIN_CUDY):
+        if entry.entry_id != entry_id:
+            continue
+        data = getattr(getattr(entry, "runtime_data", None), "data", None)
+        for node in (getattr(data, "nodes", None) or {}).values():
+            for radio in (getattr(node, "radios", None) or {}).values():
+                try:
+                    channel = int(radio.get("channel") or 0)
+                except (TypeError, ValueError):
+                    continue
+                if channel and str(radio.get("disabled")) != "1":
+                    aps.append({"bssid": None, "ssid": None, "channel": channel,
+                                "band": band_of(channel), "name": getattr(node, "name", None)})
+    return aps
 
 
 async def _async_wait_results(client, iface: str) -> list[dict[str, str]]:
