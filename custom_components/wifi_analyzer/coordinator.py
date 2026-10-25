@@ -288,8 +288,9 @@ class WifiAnalyzerCoordinator(DataUpdateCoordinator[AnalyzerData]):
             raise RuntimeError("scan_running")
         async with self._lock:
             self._cancel.clear()
-            if not self.data:
-                await self.async_refresh()
+            # Sonde aggiornate: un'integrazione partita dopo di noi (o un
+            # dispositivo appena tornato) deve poter essere usata subito.
+            await self.async_refresh()
             probes = self.selected_probes()
             if probe_ids:
                 probes = [p for p in self.data.probes if p.probe_id in probe_ids]

@@ -1,11 +1,23 @@
 {
   "domain": "wifi_analyzer",
   "name": "Wi-Fi Analyzer",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "after_dependencies": [
+    "asuswrt",
+    "cudy_m3000",
+    "esphome",
+    "freebox",
+    "fritz",
     "hassio",
+    "luci",
+    "mikrotik",
+    "mobile_app",
+    "mqtt",
     "shelly",
-    "mobile_app"
+    "tasmota",
+    "tplink_omada",
+    "unifi",
+    "wled"
   ],
   "codeowners": [
     "@marco-cavallo"

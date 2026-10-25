@@ -63,8 +63,10 @@ def _topic(config: dict[str, Any], prefix_index: int) -> str:
 
 
 async def async_discover(hass: HomeAssistant) -> list[Probe]:
-    if not loaded_entries(hass, "tasmota"):
+    entries = loaded_entries(hass, "tasmota")
+    if not entries:
         return []
+    tasmota_entry_id = entries[0].entry_id
     data: dict[str, Any] = hass.data.get(DISCOVERY_DATA) or {}
     registry = dr.async_get(hass)
     areas = ar.async_get(hass)
@@ -73,7 +75,7 @@ async def async_discover(hass: HomeAssistant) -> list[Probe]:
         if not isinstance(config, dict) or not config.get("t"):
             continue
         pretty = ":".join(mac[i:i + 2] for i in range(0, 12, 2)).lower()
-        device = registry.async_get_device(connections={(dr.CONNECTION_NETWORK_MAC, pretty)})
+        device = registry.async_get_device_by_connection((dr.CONNECTION_NETWORK_MAC, pretty), tasmota_entry_id)
         area = None
         if device and device.area_id and (item := areas.async_get_area(device.area_id)):
             area = item.name
