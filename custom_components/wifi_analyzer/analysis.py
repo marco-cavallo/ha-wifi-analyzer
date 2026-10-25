@@ -289,6 +289,8 @@ def analyze_band(
             "worst_score": score_from_load(worst),
             "networks": sum(1 for n in result.neighbors if n["channel"] == ch),
             "preferred": ch in preferred,
+            # Canale che i propri access point non possono usare: il pannello lo nasconde.
+            "usable": not allowed or ch in allowed,
             "dfs": band == BAND_5 and ch in DFS_5,
         })
     by_channel = {c["channel"]: c for c in result.channels}

@@ -1,7 +1,7 @@
 {
   "domain": "wifi_analyzer",
   "name": "Wi-Fi Analyzer",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "after_dependencies": [
     "asuswrt",
     "cudy_m3000",

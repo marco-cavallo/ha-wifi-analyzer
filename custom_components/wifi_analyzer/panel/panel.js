@@ -933,7 +933,7 @@ class WifiAnalyzerPanel extends HTMLElement {
 
   _axis() {
     const is24 = this._band === "2.4";
-    const channels = (this._bandData().channels || []).map((c) => c.channel);
+    const channels = (this._bandData().channels || []).filter((c) => c.usable !== false).map((c) => c.channel);
     // 2,4 GHz: asse continuo in canali; 5 GHz: un posto per canale.
     const pos = is24 ? (ch) => ch : (ch) => Math.max(0, channels.indexOf(ch));
     const min = is24 ? -1 : -1;
@@ -945,7 +945,8 @@ class WifiAnalyzerPanel extends HTMLElement {
   _spectrumHtml() {
     const ax = this._axis();
     const b = this._bandData();
-    const nets = this._networks();
+    // Sul 5 GHz l'asse ha solo i canali usabili: una rete fuori asse non si disegna.
+    const nets = this._networks().filter((n) => ax.is24 || ax.channels.includes(n.channel));
     const W = this._chartW, H = this._compact ? 250 : 330, L = 40, R = 10, T = 28, B = 34;
     const x = (v) => L + ((v - ax.min) / (ax.max - ax.min)) * (W - L - R);
     const yMin = -100, yMax = -25;
@@ -1099,7 +1100,9 @@ class WifiAnalyzerPanel extends HTMLElement {
   _scoresHtml() {
     const b = this._bandData();
     const ax = this._axis();
-    const chans = b.channels || [];
+    // I canali che i propri access point non possono usare non si mostrano:
+    // un 100 su un canale vietato sembrerebbe un consiglio.
+    const chans = (b.channels || []).filter((c) => c.usable !== false);
     // Riga in più sotto l'asse quando qualche sonda misura l'occupazione.
     const hasBusy = chans.some((c) => c.busy != null);
     const W = this._chartW, L = 40, R = 10, T = 22, B = hasBusy ? 48 : 30;
