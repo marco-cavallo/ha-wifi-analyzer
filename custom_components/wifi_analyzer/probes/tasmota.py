@@ -75,7 +75,11 @@ async def async_discover(hass: HomeAssistant) -> list[Probe]:
         if not isinstance(config, dict) or not config.get("t"):
             continue
         pretty = ":".join(mac[i:i + 2] for i in range(0, 12, 2)).lower()
-        device = registry.async_get_device_by_connection((dr.CONNECTION_NETWORK_MAC, pretty), tasmota_entry_id)
+        connection = (dr.CONNECTION_NETWORK_MAC, pretty)
+        if hasattr(registry, "async_get_device_by_connection"):
+            device = registry.async_get_device_by_connection(connection, tasmota_entry_id)
+        else:  # Home Assistant precedente alla 2026.10
+            device = registry.async_get_device(connections={connection})
         area = None
         if device and device.area_id and (item := areas.async_get_area(device.area_id)):
             area = item.name
