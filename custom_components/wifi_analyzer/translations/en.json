@@ -1,0 +1,99 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Wi-Fi Analyzer",
+        "description": "Found **{count}** probes: {host} server Wi-Fi cards and {shelly} Shelly devices.\n\nChoose which ones to use for scans. A Shelly leaves Wi-Fi for about 3 seconds while scanning: 4-6 of them, one per room, are enough.",
+        "data": {
+          "probes": "Probes"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Wi-Fi Analyzer is already configured",
+      "single_instance_allowed": "Wi-Fi Analyzer is already configured",
+      "no_probes": "No probe found: you need a Shelly Gen2 or later, or a Wi-Fi card on the Home Assistant server (HA OS)."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Settings",
+        "data": {
+          "probes": "Probes",
+          "own_ssids": "Home networks (SSID)",
+          "scan_hours": "Automatic scan every",
+          "channel_plan": "Proposed 2.4 GHz channels",
+          "panel": "Show the panel in the sidebar"
+        },
+        "data_description": {
+          "own_ssids": "Empty: detected from the connected devices.",
+          "scan_hours": "0 = on demand only. Each scan takes the Shelly probes off Wi-Fi for a few seconds.",
+          "channel_plan": "1-6-11 is the standard. 1-5-9-13 is used in Europe where no neighbor follows 1-6-11."
+        }
+      }
+    }
+  },
+  "selector": {
+    "channel_plan": {
+      "options": {
+        "1-6-11": "1 · 6 · 11",
+        "1-5-9-13": "1 · 5 · 9 · 13"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_channel_24": {
+        "name": "Current channel 2.4 GHz"
+      },
+      "recommended_channel_24": {
+        "name": "Recommended channel 2.4 GHz"
+      },
+      "channel_score_24": {
+        "name": "Channel quality 2.4 GHz"
+      },
+      "neighbors_24": {
+        "name": "Neighbor networks 2.4 GHz"
+      },
+      "current_channel_5": {
+        "name": "Current channel 5 GHz"
+      },
+      "recommended_channel_5": {
+        "name": "Recommended channel 5 GHz"
+      },
+      "channel_score_5": {
+        "name": "Channel quality 5 GHz"
+      },
+      "neighbors_5": {
+        "name": "Neighbor networks 5 GHz"
+      },
+      "wifi_devices": {
+        "name": "Wi-Fi devices"
+      },
+      "weak_devices": {
+        "name": "Devices with weak signal"
+      },
+      "offline_devices": {
+        "name": "Unreachable devices"
+      },
+      "last_scan": {
+        "name": "Last scan"
+      },
+      "probes": {
+        "name": "Available probes"
+      }
+    },
+    "button": {
+      "scan": {
+        "name": "Start scan"
+      }
+    }
+  },
+  "services": {
+    "scan": {
+      "name": "Start scan",
+      "description": "Runs a Wi-Fi scan with the selected probes and returns a summary."
+    }
+  }
+}

@@ -1,0 +1,1 @@
+# Nessuna dipendenza Python: l'integrazione usa solo la libreria standard e quello che Home Assistant ha già.

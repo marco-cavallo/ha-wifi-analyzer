@@ -1,0 +1,99 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Wi-Fi Analyzer",
+        "description": "Ho trovato **{count}** sonde: {host} schede Wi-Fi del server e {shelly} Shelly.\n\nScegli quali usare per le scansioni. Durante la scansione uno Shelly si stacca dal Wi-Fi per circa 3 secondi: ne bastano 4-6, uno per stanza.",
+        "data": {
+          "probes": "Sonde"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Wi-Fi Analyzer è già configurato",
+      "single_instance_allowed": "Wi-Fi Analyzer è già configurato",
+      "no_probes": "Non ho trovato nessuna sonda: servono uno Shelly di seconda generazione o successiva, oppure una scheda Wi-Fi sul server Home Assistant (HA OS)."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Impostazioni",
+        "data": {
+          "probes": "Sonde",
+          "own_ssids": "Reti di casa (SSID)",
+          "scan_hours": "Scansione automatica ogni",
+          "channel_plan": "Canali proposti sul 2,4 GHz",
+          "panel": "Mostra il pannello nella barra laterale"
+        },
+        "data_description": {
+          "own_ssids": "Vuoto: le riconosco dai dispositivi collegati.",
+          "scan_hours": "0 = solo a comando. Ogni scansione stacca le sonde Shelly dal Wi-Fi per qualche secondo.",
+          "channel_plan": "1-6-11 è lo standard. 1-5-9-13 si usa in Europa dove nessun vicino segue 1-6-11."
+        }
+      }
+    }
+  },
+  "selector": {
+    "channel_plan": {
+      "options": {
+        "1-6-11": "1 · 6 · 11",
+        "1-5-9-13": "1 · 5 · 9 · 13"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_channel_24": {
+        "name": "Canale attuale 2,4 GHz"
+      },
+      "recommended_channel_24": {
+        "name": "Canale consigliato 2,4 GHz"
+      },
+      "channel_score_24": {
+        "name": "Qualità canale 2,4 GHz"
+      },
+      "neighbors_24": {
+        "name": "Reti vicine 2,4 GHz"
+      },
+      "current_channel_5": {
+        "name": "Canale attuale 5 GHz"
+      },
+      "recommended_channel_5": {
+        "name": "Canale consigliato 5 GHz"
+      },
+      "channel_score_5": {
+        "name": "Qualità canale 5 GHz"
+      },
+      "neighbors_5": {
+        "name": "Reti vicine 5 GHz"
+      },
+      "wifi_devices": {
+        "name": "Dispositivi Wi-Fi"
+      },
+      "weak_devices": {
+        "name": "Dispositivi con segnale debole"
+      },
+      "offline_devices": {
+        "name": "Dispositivi non raggiungibili"
+      },
+      "last_scan": {
+        "name": "Ultima scansione"
+      },
+      "probes": {
+        "name": "Sonde disponibili"
+      }
+    },
+    "button": {
+      "scan": {
+        "name": "Avvia scansione"
+      }
+    }
+  },
+  "services": {
+    "scan": {
+      "name": "Avvia scansione",
+      "description": "Esegue una scansione Wi-Fi con le sonde scelte e restituisce il riepilogo."
+    }
+  }
+}
